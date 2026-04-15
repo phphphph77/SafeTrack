@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Fonte grande ── */
+.fonte-grande {
+  font-size: 110% !important;
+}
+
+/* ════════════════════════════════════════════
+   MODOS DE DALTONISMO
+   ════════════════════════════════════════════ */
+
+/* ── Deuteranopia (dificuldade com VERDE) — mais comum ~6% ── */
+.tema-deuteranopia .text-green-500,
+.tema-deuteranopia .text-green-600,
+.tema-deuteranopia .text-green-700 { color: #1d6bb5 !important; }
+.tema-deuteranopia .bg-green-50    { background-color: #eff6ff !important; }
+.tema-deuteranopia .bg-green-100   { background-color: #dbeafe !important; }
+.tema-deuteranopia .text-red-600,
+.tema-deuteranopia .text-red-700   { color: #c2600a !important; }
+.tema-deuteranopia .bg-red-100,
+.tema-deuteranopia .bg-red-50      { background-color: #fff7ed !important; border: 2px dashed #c2600a !important; }
+.tema-deuteranopia .bg-teal-700,
+.tema-deuteranopia .bg-teal-600    { background-color: #1d4ed8 !important; }
+.tema-deuteranopia .text-teal-700  { color: #1d4ed8 !important; }
+.tema-deuteranopia .text-yellow-600 { color: #7c3aed !important; }
+.tema-deuteranopia .bg-yellow-50,
+.tema-deuteranopia .bg-yellow-100  { background-color: #f5f3ff !important; }
+.tema-deuteranopia .text-yellow-800 { color: #4c1d95 !important; }
+.tema-deuteranopia .bg-orange-100  { background-color: #fef9c3 !important; }
+.tema-deuteranopia .text-orange-700 { color: #854d0e !important; }
+
+/* ── Protanopia (dificuldade com VERMELHO) — ~2% ── */
+.tema-protanopia .text-red-500,
+.tema-protanopia .text-red-600,
+.tema-protanopia .text-red-700     { color: #0369a1 !important; font-weight: 600 !important; }
+.tema-protanopia .bg-red-50,
+.tema-protanopia .bg-red-100       { background-color: #e0f2fe !important; border: 2px dashed #0369a1 !important; }
+.tema-protanopia .text-green-500,
+.tema-protanopia .text-green-600,
+.tema-protanopia .text-green-700   { color: #b45309 !important; }
+.tema-protanopia .bg-green-50      { background-color: #fefce8 !important; }
+.tema-protanopia .bg-green-100     { background-color: #fef3c7 !important; }
+.tema-protanopia .bg-teal-700,
+.tema-protanopia .bg-teal-600      { background-color: #0c4a6e !important; }
+.tema-protanopia .text-teal-700    { color: #0c4a6e !important; }
+.tema-protanopia .text-yellow-600  { color: #92400e !important; }
+.tema-protanopia .bg-yellow-100    { background-color: #fef3c7 !important; }
+.tema-protanopia .bg-orange-100    { background-color: #e0f2fe !important; }
+.tema-protanopia .text-orange-700  { color: #0369a1 !important; }
+
+/* ── Tritanopia (dificuldade com AZUL/AMARELO) — ~0.01% ── */
+.tema-tritanopia .text-blue-500,
+.tema-tritanopia .text-blue-600,
+.tema-tritanopia .text-blue-700    { color: #dc2626 !important; }
+.tema-tritanopia .bg-blue-50,
+.tema-tritanopia .bg-blue-100      { background-color: #fee2e2 !important; }
+.tema-tritanopia .text-yellow-500,
+.tema-tritanopia .text-yellow-600,
+.tema-tritanopia .text-yellow-700,
+.tema-tritanopia .text-yellow-800  { color: #7c3aed !important; }
+.tema-tritanopia .bg-yellow-50,
+.tema-tritanopia .bg-yellow-100    { background-color: #ede9fe !important; }
+.tema-tritanopia .bg-teal-700,
+.tema-tritanopia .bg-teal-600      { background-color: #7e22ce !important; }
+.tema-tritanopia .text-teal-700    { color: #7e22ce !important; }
+.tema-tritanopia .text-green-600,
+.tema-tritanopia .text-green-700   { color: #15803d !important; }
+.tema-tritanopia .bg-green-100     { background-color: #dcfce7 !important; }
+.tema-tritanopia .text-red-600,
+.tema-tritanopia .text-red-700     { color: #b91c1c !important; }
+.tema-tritanopia .bg-red-100,
+.tema-tritanopia .bg-red-50        { background-color: #fee2e2 !important; }
+
+/* ── Acromatopsia (SEM cores — escala de cinza) ── */
+.tema-acromato {
+  filter: grayscale(100%) contrast(1.2) !important;
+}
+.tema-acromato .text-green-600,
+.tema-acromato .text-green-700,
+.tema-acromato .text-red-600,
+.tema-acromato .text-red-700,
+.tema-acromato .text-yellow-600,
+.tema-acromato .text-orange-700    { font-weight: 700 !important; }
+.tema-acromato .bg-green-100,
+.tema-acromato .bg-red-100,
+.tema-acromato .bg-yellow-100,
+.tema-acromato .bg-orange-100      { border: 2px solid #555 !important; }
+
+/* ── Acessibilidade comum a TODOS os modos daltônicos ── */
+.tema-deuteranopia a,
+.tema-protanopia a,
+.tema-tritanopia a,
+.tema-acromato a {
+  text-decoration: underline !important;
+  text-decoration-style: solid !important;
+}
+
+.tema-deuteranopia *:focus-visible,
+.tema-protanopia *:focus-visible,
+.tema-tritanopia *:focus-visible,
+.tema-acromato *:focus-visible {
+  outline: 3px solid #1d6bb5 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 0 6px rgba(29, 107, 181, 0.25) !important;
+}
+
+.tema-deuteranopia input, .tema-deuteranopia select, .tema-deuteranopia textarea,
+.tema-protanopia input,  .tema-protanopia select,  .tema-protanopia textarea,
+.tema-tritanopia input,  .tema-tritanopia select,  .tema-tritanopia textarea,
+.tema-acromato input,    .tema-acromato select,    .tema-acromato textarea {
+  border: 2px solid #1d4ed8 !important;
+}
+
+/* Ícones nos badges */
+.tema-deuteranopia .badge-valido::before,
+.tema-protanopia .badge-valido::before,
+.tema-tritanopia .badge-valido::before,
+.tema-acromato .badge-valido::before    { content: "✓ "; font-weight: bold; }
+
+.tema-deuteranopia .badge-vencido::before,
+.tema-protanopia .badge-vencido::before,
+.tema-tritanopia .badge-vencido::before,
+.tema-acromato .badge-vencido::before   { content: "✕ "; font-weight: bold; }
+
+.tema-deuteranopia .badge-cancelado::before,
+.tema-protanopia .badge-cancelado::before,
+.tema-tritanopia .badge-cancelado::before,
+.tema-acromato .badge-cancelado::before { content: "— "; font-weight: bold; }
+
+.tema-deuteranopia .badge-pendente::before,
+.tema-protanopia .badge-pendente::before,
+.tema-tritanopia .badge-pendente::before,
+.tema-acromato .badge-pendente::before  { content: "? "; font-weight: bold; }
+
+.tema-deuteranopia .badge-execucao::before,
+.tema-protanopia .badge-execucao::before,
+.tema-tritanopia .badge-execucao::before,
+.tema-acromato .badge-execucao::before  { content: "▶ "; font-weight: bold; }
+
+.tema-deuteranopia .badge-concluida::before,
+.tema-protanopia .badge-concluida::before,
+.tema-tritanopia .badge-concluida::before,
+.tema-acromato .badge-concluida::before { content: "✔ "; font-weight: bold; }
+
+/* ════════════════════════════════════════════
+   ALTO CONTRASTE
+   ════════════════════════════════════════════ */
+.tema-alto-contraste body,
+.tema-alto-contraste {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+.tema-alto-contraste .bg-white {
+  background-color: #111 !important;
+  color: #fff !important;
+}
+.tema-alto-contraste .bg-gray-50 {
+  background-color: #1a1a1a !important;
+}
+.tema-alto-contraste .border-gray-200 {
+  border-color: #555 !important;
+}
+.tema-alto-contraste .text-gray-500,
+.tema-alto-contraste .text-gray-600,
+.tema-alto-contraste .text-gray-400 {
+  color: #ccc !important;
+}
+.tema-alto-contraste .text-gray-900 {
+  color: #fff !important;
+}
+.tema-alto-contraste .bg-teal-700 {
+  background-color: #0ea5e9 !important;
+}
+.tema-alto-contraste .text-green-600,
+.tema-alto-contraste .text-green-700 {
+  color: #4ade80 !important;
+}
+.tema-alto-contraste .text-red-600,
+.tema-alto-contraste .text-red-700 {
+  color: #f87171 !important;
+}
+.tema-alto-contraste .bg-green-100 {
+  background-color: #052e16 !important;
+}
+.tema-alto-contraste .bg-red-100,
+.tema-alto-contraste .bg-red-50 {
+  background-color: #2d0a0a !important;
+}
+.tema-alto-contraste input,
+.tema-alto-contraste select,
+.tema-alto-contraste textarea {
+  background-color: #222 !important;
+  color: #fff !important;
+  border-color: #aaa !important;
+}
+.tema-alto-contraste *:focus-visible {
+  outline: 3px solid #facc15 !important;
+  outline-offset: 4px !important;
+}
+.tema-alto-contraste a {
+  color: #60a5fa !important;
+  text-decoration: underline !important;
+}
+.tema-alto-contraste button {
+  border: 1px solid #aaa !important;
+}
