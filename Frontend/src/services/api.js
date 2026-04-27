@@ -5,7 +5,6 @@ const api = axios.create({
   timeout: 15000,
 });
 
-// Injeta o token JWT em todas as requisições
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('hse_token');
   if (token) {
@@ -14,7 +13,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Redireciona para login em caso de token expirado
 api.interceptors.response.use(
   (response) => response,
   (error) => {

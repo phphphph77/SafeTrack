@@ -23,33 +23,33 @@ export default function Layout({ children }) {
   const navItems = useMemo(() => {
     const itens = [
       {
-        path: '/dashboard',
+        path:  '/dashboard',
         label: 'Dashboard',
-        icon: LayoutDashboard,
+        icon:  LayoutDashboard,
         roles: ['admin', 'hse', 'funcionario'],
       },
       {
-        path: '/usuarios',
+        path:  '/usuarios',
         label: 'Usuários',
-        icon: Users,
+        icon:  Users,
         roles: ['admin'],
       },
       {
-        path: '/treinamentos',
+        path:  '/treinamentos',
         label: 'Treinamentos',
-        icon: BookOpen,
+        icon:  BookOpen,
         roles: ['admin', 'hse'],
       },
       {
-        path: '/certificados',
+        path:  '/certificados',
         label: 'Certificados',
-        icon: Award,
+        icon:  Award,
         roles: ['admin', 'hse'],
       },
       {
-        path: '/pt',
+        path:  '/pt',
         label: 'Permissões de Trab.',
-        icon: ClipboardList,
+        icon:  ClipboardList,
         roles: ['admin', 'hse'],
       },
     ];
@@ -70,16 +70,12 @@ export default function Layout({ children }) {
     : 'Usuário';
 
   const iniciais = usuario?.nome
-    ? usuario.nome
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(n => n[0]?.toUpperCase())
-        .join('')
+    ? usuario.nome.split(' ').filter(Boolean).slice(0, 2).map(n => n[0]?.toUpperCase()).join('')
     : 'U';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
+
       {/* Botão mobile */}
       <button
         onClick={() => setSidebarAberta(true)}
@@ -101,8 +97,8 @@ export default function Layout({ children }) {
       {/* Sidebar */}
       <aside
         className={`
-          fixed lg:static top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-200
-          flex flex-col transition-transform duration-300
+          fixed lg:sticky lg:top-0 z-50 h-screen w-64 bg-white border-r border-gray-200
+          flex flex-col transition-transform duration-300 shrink-0
           ${sidebarAberta ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
         role="region"
@@ -110,7 +106,7 @@ export default function Layout({ children }) {
         tabIndex={0}
       >
         {/* Topo */}
-        <div className="h-20 px-5 border-b border-gray-200 flex items-center justify-between">
+        <div className="h-20 px-5 border-b border-gray-200 flex items-center justify-between shrink-0">
           <Link to="/dashboard" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-teal-700 flex items-center justify-center text-white">
               <ShieldCheck size={20} />
@@ -120,7 +116,6 @@ export default function Layout({ children }) {
               <p className="text-xs text-gray-500">Treinamentos</p>
             </div>
           </Link>
-
           <button
             onClick={() => setSidebarAberta(false)}
             className="lg:hidden text-gray-400 hover:text-gray-600"
@@ -131,11 +126,10 @@ export default function Layout({ children }) {
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
+        <nav className="px-4 py-5 space-y-1">
           {navItems.map(item => {
-            const Icon = item.icon;
+            const Icon  = item.icon;
             const ativo = location.pathname === item.path;
-
             return (
               <Link
                 key={item.path}
@@ -143,11 +137,9 @@ export default function Layout({ children }) {
                 onClick={() => setSidebarAberta(false)}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
-                  ${
-                    ativo
-                      ? 'bg-teal-50 text-teal-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }
+                  ${ativo
+                    ? 'bg-teal-50 text-teal-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
                 `}
                 aria-current={ativo ? 'page' : undefined}
               >
@@ -158,8 +150,21 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        {/* Rodapé */}
-        <div className="p-4 border-t border-gray-200">
+        {/* Card informativo — preenche o espaço vazio */}
+        <div className="flex-1 px-4 pb-4 flex items-end">
+          <div className="w-full rounded-xl bg-teal-50 border border-teal-100 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck size={14} className="text-teal-700" />
+              <p className="text-xs font-semibold text-teal-800">SafeTrack</p>
+            </div>
+            <p className="text-xs text-teal-700 leading-relaxed">
+              Mantenha seus treinamentos em dia para garantir suas permissões de trabalho.
+            </p>
+          </div>
+        </div>
+
+        {/* Rodapé — sempre visível no fim */}
+        <div className="p-4 border-t border-gray-200 shrink-0">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-full bg-teal-700 text-white flex items-center justify-center text-sm font-semibold shrink-0">
               {iniciais}
@@ -169,7 +174,6 @@ export default function Layout({ children }) {
               <p className="text-xs text-gray-500 capitalize">{usuario?.role || 'usuário'}</p>
             </div>
           </div>
-
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
@@ -180,8 +184,8 @@ export default function Layout({ children }) {
         </div>
       </aside>
 
-      {/* Conteúdo */}
-      <main className="flex-1 min-w-0">
+      {/* Conteúdo — rola independente da sidebar */}
+      <main className="flex-1 min-w-0 overflow-y-auto h-screen">
         <div className="p-4 pt-20 lg:pt-6 lg:p-6">
           {children}
         </div>

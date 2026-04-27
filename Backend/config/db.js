@@ -15,11 +15,11 @@ const pool = mysql.createPool({
 
 pool.getConnection()
   .then((conn) => {
-    console.log('[DB] Conexão com MySQL estabelecida com sucesso.');
+    console.log('Conexão com MySQL estabelecida com sucesso.');
     conn.release();
   })
   .catch((err) => {
-    console.error('[DB] Falha ao conectar ao MySQL:', err.message);
+    console.error('Falha ao conectar ao MySQL:', err.message);
     process.exit(1);
   });
 

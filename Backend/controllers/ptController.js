@@ -28,7 +28,6 @@ const emitirPT = async (req, res) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    // 1. Verifica se o funcionário existe e está ativo
     const [funcionario] = await connection.query(
       `SELECT id, nome, email, ativo
        FROM usuarios
@@ -42,7 +41,6 @@ const emitirPT = async (req, res) => {
       return res.status(404).json({ erro: 'Funcionário não encontrado.' });
     }
 
-    // 2. Bloqueia se funcionário estiver inativo
     if (!funcionario[0].ativo) {
       await connection.rollback();
       return res.status(422).json({
@@ -52,7 +50,6 @@ const emitirPT = async (req, res) => {
       });
     }
 
-    // 3. Verifica se o treinamento existe
     const [treinamento] = await connection.query(
       'SELECT id, nome FROM treinamentos WHERE id = ? AND ativo = 1 LIMIT 1',
       [treinamento_id]
@@ -62,7 +59,6 @@ const emitirPT = async (req, res) => {
       return res.status(404).json({ erro: 'Treinamento não encontrado.' });
     }
 
-    // 4. Verificação de certificado válido
     const [certRows] = await connection.query(
       `SELECT id, data_validade, codigo
        FROM certificados
@@ -109,10 +105,8 @@ const emitirPT = async (req, res) => {
 
     const certificadoValido = certRows[0];
 
-    // 5. Gera número único para a PT
     const numeroPT = `PT-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
-    // 6. Insere a PT já como 'aprovada' (certificado já foi verificado)
     const [resultado] = await connection.query(
       `INSERT INTO permissoes_trabalho
          (numero_pt, funcionario_id, treinamento_id, certificado_id, atividade,

@@ -79,7 +79,6 @@ const registrar = async (req, res) => {
         `UPDATE usuarios
          SET nome = ?, senha = ?, role = ?, matricula = ?, ativo = 1, criado_em = NOW()
          WHERE id = ?`,
-        // ↑ era 'senha_hash', agora 'senha'
         [nome.trim(), senhaHash, role, matricula || null, usuarioExistente.id]
       );
 
@@ -92,7 +91,6 @@ const registrar = async (req, res) => {
     // Usuário novo
     const [resultado] = await pool.query(
       'INSERT INTO usuarios (nome, email, senha, role, matricula, ativo, criado_em) VALUES (?, ?, ?, ?, ?, 1, NOW())',
-      // ↑ era 'senha_hash', agora 'senha'
       [nome.trim(), emailNormalizado, senhaHash, role, matricula || null]
     );
 

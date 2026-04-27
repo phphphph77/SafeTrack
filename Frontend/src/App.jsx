@@ -28,23 +28,23 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
+        { <Route
           path="/treinamentos"
           element={
             <ProtectedRoute roles={['admin', 'hse']}>
               <Treinamentos />
             </ProtectedRoute>
-          }
-        />
-        <Route
+          } 
+        /> } 
+        { <Route
           path="/certificados"
           element={
             <ProtectedRoute roles={['admin', 'hse']}>
               <Certificados />
             </ProtectedRoute>
           }
-        />
-        <Route
+        /> }
+        { <Route
           path="/pt"
           element={
             <ProtectedRoute roles={['admin', 'hse']}>
@@ -52,7 +52,7 @@ export default function App() {
             </ProtectedRoute>
             
           }
-        />
+        /> }
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

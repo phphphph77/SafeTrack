@@ -35,7 +35,7 @@ const dispararAlertasN8n = async () => {
       total:     rows.length,
       gerado_em: new Date().toISOString(),
     }, {
-      validateStatus: () => true  // ← não lança erro mesmo com status 500
+      validateStatus: () => true
     });
 
 
