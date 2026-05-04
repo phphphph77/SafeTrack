@@ -199,11 +199,3 @@ O sistema foi desenvolvido com foco em inclusão:
 - Conformidade com as diretrizes **WCAG 2.1**
 
 ---
-
-## 📄 Licença
-
-Projeto acadêmico desenvolvido para o curso de Farmácia — uso educacional.
-
----
-
-Desenvolvido por **Phelipe Almeida**
