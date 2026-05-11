@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Layout from '../components/Layout';
 import {
   Users, UserPlus, Search, X, Eye, EyeOff,
-  AlertTriangle, CheckCircle, AlertCircle, UserCheck, UserX
+  AlertTriangle, CheckCircle, AlertCircle, UserCheck, UserX, Camera
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -21,20 +21,95 @@ function RoleBadge({ role }) {
   );
 }
 
+// Avatar clicável com upload
+function AvatarUpload({ usuario, onFotoAtualizada }) {
+  const inputRef = useRef(null);
+  const [enviando, setEnviando] = useState(false);
+  const [hover, setHover] = useState(false);
+
+  const handleClick = () => inputRef.current?.click();
+
+  const handleArquivo = async (e) => {
+    const arquivo = e.target.files[0];
+    if (!arquivo) return;
+    setEnviando(true);
+    try {
+      const form = new FormData();
+      form.append('foto', arquivo);
+      const { data } = await api.patch(`/usuarios/${usuario.id}/foto`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      onFotoAtualizada(usuario.id, data.foto_perfil);
+    } catch (err) {
+      alert(err.response?.data?.erro || 'Erro ao enviar foto.');
+    } finally {
+      setEnviando(false);
+      e.target.value = '';
+    }
+  };
+
+  const fotoUrl = usuario.foto_perfil
+    ? `http://localhost:3001/${usuario.foto_perfil}`
+    : null;
+
+  const iniciais = usuario.nome?.split(' ').filter(Boolean).slice(0, 2)
+    .map(n => n[0]?.toUpperCase()).join('');
+
+  return (
+    <div
+      className="relative w-8 h-8 cursor-pointer flex-shrink-0"
+      onClick={handleClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      title="Clique para alterar foto"
+    >
+      {/* Avatar */}
+      {fotoUrl ? (
+        <img
+          src={fotoUrl}
+          alt={usuario.nome}
+          className="w-8 h-8 rounded-full object-cover"
+        />
+      ) : (
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white ${usuario.ativo ? 'bg-teal-600' : 'bg-gray-400'}`}>
+          {iniciais}
+        </div>
+      )}
+
+      {/* Overlay câmera — JS puro, sem group-hover */}
+      {(hover || enviando) && (
+        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+          {enviando
+            ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            : <Camera size={12} className="text-white" />
+          }
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        className="hidden"
+        onChange={handleArquivo}
+      />
+    </div>
+  );
+}
+
 export default function Usuarios() {
-  const [usuarios, setUsuarios]     = useState([]);
-  const [carregando, setCarregando] = useState(true);
-  const [modalAberto, setModalAberto] = useState(false);
-  const [modalToggle, setModalToggle] = useState(null); // usuário a ativar/desativar
-  const [salvando, setSalvando]     = useState(false);
-  const [sucesso, setSucesso]       = useState('');
-  const [erro, setErro]             = useState('');
+  const [usuarios, setUsuarios]         = useState([]);
+  const [carregando, setCarregando]     = useState(true);
+  const [modalAberto, setModalAberto]   = useState(false);
+  const [modalToggle, setModalToggle]   = useState(null);
+  const [salvando, setSalvando]         = useState(false);
+  const [sucesso, setSucesso]           = useState('');
+  const [erro, setErro]                 = useState('');
   const [senhaVisivel, setSenhaVisivel] = useState(false);
 
-  // Filtros
-  const [busca, setBusca]           = useState('');
-  const [filtroStatus, setFiltroStatus] = useState('ativos'); // 'ativos' | 'inativos' | 'todos'
-  const [filtroRole, setFiltroRole] = useState('todos');
+  const [busca, setBusca]               = useState('');
+  const [filtroStatus, setFiltroStatus] = useState('ativos');
+  const [filtroRole, setFiltroRole]     = useState('todos');
 
   const [form, setForm] = useState({
     nome: '', email: '', senha: '', role: 'funcionario',
@@ -45,8 +120,7 @@ export default function Usuarios() {
   const carregarUsuarios = async () => {
     setCarregando(true);
     try {
-      const { data } = await // Usuarios.jsx — chama com ?todos=true para gestão completa
-      api.get('/usuarios?todos=true');
+      const { data } = await api.get('/usuarios?todos=true');
       setUsuarios(data.funcionarios || []);
     } catch (err) {
       console.error('Erro ao carregar usuários:', err);
@@ -55,7 +129,13 @@ export default function Usuarios() {
     }
   };
 
-  // Stats gerais
+  // Atualiza foto localmente sem recarregar tudo
+  const handleFotoAtualizada = (id, novaFoto) => {
+    setUsuarios(prev =>
+      prev.map(u => u.id === id ? { ...u, foto_perfil: novaFoto } : u)
+    );
+  };
+
   const stats = useMemo(() => ({
     total:    usuarios.length,
     ativos:   usuarios.filter(u => u.ativo).length,
@@ -64,20 +144,16 @@ export default function Usuarios() {
     hse:      usuarios.filter(u => u.role === 'hse' && u.ativo).length,
   }), [usuarios]);
 
-  // Aplica filtros
   const usuariosFiltrados = useMemo(() => {
     return usuarios.filter(u => {
       const passaStatus =
-        filtroStatus === 'todos'   ? true :
-        filtroStatus === 'ativos'  ? u.ativo :
-        filtroStatus === 'inativos'? !u.ativo : true;
-
-      const passaRole = filtroRole === 'todos' || u.role === filtroRole;
-
+        filtroStatus === 'todos'    ? true :
+        filtroStatus === 'ativos'   ? u.ativo :
+        filtroStatus === 'inativos' ? !u.ativo : true;
+      const passaRole  = filtroRole === 'todos' || u.role === filtroRole;
       const passaBusca = !busca ||
         u.nome.toLowerCase().includes(busca.toLowerCase()) ||
         u.email.toLowerCase().includes(busca.toLowerCase());
-
       return passaStatus && passaRole && passaBusca;
     });
   }, [usuarios, filtroStatus, filtroRole, busca]);
@@ -113,9 +189,7 @@ export default function Usuarios() {
     if (!modalToggle) return;
     setSalvando(true);
     try {
-      await api.patch(`/usuarios/${modalToggle.id}/status`, {
-        ativo: !modalToggle.ativo,
-      });
+      await api.patch(`/usuarios/${modalToggle.id}/status`, { ativo: !modalToggle.ativo });
       setModalToggle(null);
       carregarUsuarios();
     } catch (err) {
@@ -148,19 +222,16 @@ export default function Usuarios() {
         {/* Cards de resumo */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { label: 'Total',      value: stats.total,    icon: Users,     cor: 'text-gray-600',   bg: 'bg-gray-100',   filtro: 'todos'    },
-            { label: 'Ativos',     value: stats.ativos,   icon: UserCheck, cor: 'text-green-600',  bg: 'bg-green-100',  filtro: 'ativos'   },
-            { label: 'Inativos',   value: stats.inativos, icon: UserX,     cor: 'text-red-600',    bg: 'bg-red-100',    filtro: 'inativos' },
-            { label: 'Admins/HSE', value: stats.admins + stats.hse, icon: Users, cor: 'text-blue-600', bg: 'bg-blue-100', filtro: null },
+            { label: 'Total',        value: stats.total,    icon: Users,     cor: 'text-gray-600',   bg: 'bg-gray-100',  filtro: 'todos'    },
+            { label: 'Ativos',       value: stats.ativos,   icon: UserCheck, cor: 'text-green-600',  bg: 'bg-green-100', filtro: 'ativos'   },
+            { label: 'Inativos',     value: stats.inativos, icon: UserX,     cor: 'text-red-600',    bg: 'bg-red-100',   filtro: 'inativos' },
+            { label: 'Admins/HSE',   value: stats.admins + stats.hse, icon: Users, cor: 'text-blue-600', bg: 'bg-blue-100', filtro: null },
             { label: 'Funcionários', value: usuarios.filter(u => u.role === 'funcionario').length, icon: Users, cor: 'text-teal-600', bg: 'bg-teal-100', filtro: null },
           ].map(({ label, value, icon: Icon, cor, bg, filtro }) => (
-            <button
-              key={label}
+            <button key={label}
               onClick={() => filtro && setFiltroStatus(filtro)}
               className={`bg-white rounded-xl border-2 p-4 text-left transition-all ${
-                filtro && filtroStatus === filtro
-                  ? 'border-teal-500 shadow-sm'
-                  : 'border-gray-200 hover:border-gray-300'
+                filtro && filtroStatus === filtro ? 'border-teal-500 shadow-sm' : 'border-gray-200 hover:border-gray-300'
               } ${filtro ? 'cursor-pointer' : 'cursor-default'}`}
             >
               <div className={`inline-flex p-2 rounded-lg ${bg} mb-2`}>
@@ -175,18 +246,13 @@ export default function Usuarios() {
         {/* Barra de filtros */}
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex flex-wrap gap-3 items-end">
-            {/* Busca */}
             <div className="flex-1 min-w-48">
               <label className="block text-xs font-medium text-gray-600 mb-1">Buscar</label>
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Nome ou e-mail..."
-                  value={busca}
+                <input type="text" placeholder="Nome ou e-mail..." value={busca}
                   onChange={e => setBusca(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
+                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
                 {busca && (
                   <button onClick={() => setBusca('')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -195,8 +261,6 @@ export default function Usuarios() {
                 )}
               </div>
             </div>
-
-            {/* Filtro status */}
             <div className="min-w-36">
               <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
               <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)}
@@ -206,8 +270,6 @@ export default function Usuarios() {
                 <option value="inativos">Inativos</option>
               </select>
             </div>
-
-            {/* Filtro perfil */}
             <div className="min-w-36">
               <label className="block text-xs font-medium text-gray-600 mb-1">Perfil</label>
               <select value={filtroRole} onChange={e => setFiltroRole(e.target.value)}
@@ -218,7 +280,6 @@ export default function Usuarios() {
                 <option value="funcionario">Funcionário</option>
               </select>
             </div>
-
             {temFiltroAtivo && (
               <button onClick={limparFiltros}
                 className="px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -226,7 +287,6 @@ export default function Usuarios() {
               </button>
             )}
           </div>
-
           {temFiltroAtivo && (
             <p className="text-xs text-gray-500 mt-3">
               Exibindo <span className="font-semibold text-teal-700">{usuariosFiltrados.length}</span> de{' '}
@@ -279,9 +339,7 @@ export default function Usuarios() {
                       className={`transition-colors ${!u.ativo ? 'bg-gray-50 opacity-75' : 'hover:bg-gray-50'}`}>
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white ${u.ativo ? 'bg-teal-600' : 'bg-gray-400'}`}>
-                            {u.nome?.split(' ').filter(Boolean).slice(0, 2).map(n => n[0]?.toUpperCase()).join('')}
-                          </div>
+                          <AvatarUpload usuario={u} onFotoAtualizada={handleFotoAtualizada} />
                           <span className={`font-medium ${u.ativo ? 'text-gray-900' : 'text-gray-500 line-through'}`}>
                             {u.nome}
                           </span>
@@ -301,19 +359,15 @@ export default function Usuarios() {
                         )}
                       </td>
                       <td className="px-6 py-3 text-gray-500 tabular-nums text-xs">
-                        {u.criado_em
-                          ? new Date(u.criado_em).toLocaleDateString('pt-BR')
-                          : '—'}
+                        {u.criado_em ? new Date(u.criado_em).toLocaleDateString('pt-BR') : '—'}
                       </td>
                       <td className="px-6 py-3">
-                        <button
-                          onClick={() => setModalToggle(u)}
+                        <button onClick={() => setModalToggle(u)}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                             u.ativo
                               ? 'text-red-600 border-red-200 hover:bg-red-50'
                               : 'text-green-600 border-green-200 hover:bg-green-50'
-                          }`}
-                        >
+                          }`}>
                           {u.ativo ? <><UserX size={13} /> Desativar</> : <><UserCheck size={13} /> Reativar</>}
                         </button>
                       </td>
@@ -336,7 +390,6 @@ export default function Usuarios() {
                 <X size={20} />
               </button>
             </div>
-
             <div className="p-6">
               {sucesso && (
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl flex items-start gap-2">
@@ -350,7 +403,6 @@ export default function Usuarios() {
                   <p className="text-sm text-red-700">{erro}</p>
                 </div>
               )}
-
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nome completo *</label>
@@ -358,31 +410,25 @@ export default function Usuarios() {
                     placeholder="Ex: João da Silva"
                     className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">E-mail *</label>
                   <input type="email" name="email" value={form.email} onChange={handleChange} required
                     placeholder="joao@empresa.com"
                     className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Senha *</label>
                   <div className="relative">
-                    <input
-                      type={senhaVisivel ? 'text' : 'password'}
+                    <input type={senhaVisivel ? 'text' : 'password'}
                       name="senha" value={form.senha} onChange={handleChange} required
                       placeholder="Mínimo 6 caracteres"
-                      className="w-full px-3 py-2.5 pr-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                    <button type="button"
-                      onClick={() => setSenhaVisivel(!senhaVisivel)}
+                      className="w-full px-3 py-2.5 pr-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    <button type="button" onClick={() => setSenhaVisivel(!senhaVisivel)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {senhaVisivel ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Perfil *</label>
                   <select name="role" value={form.role} onChange={handleChange} required
@@ -392,7 +438,6 @@ export default function Usuarios() {
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setModalAberto(false)}
                     className="flex-1 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
@@ -426,7 +471,6 @@ export default function Usuarios() {
               </h2>
               <p className="text-sm text-gray-500 mb-1">{modalToggle.nome}</p>
               <p className="text-xs text-gray-400 mb-4">{modalToggle.email}</p>
-
               {modalToggle.ativo ? (
                 <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl text-left">
                   <div className="flex items-start gap-2">
@@ -447,7 +491,6 @@ export default function Usuarios() {
                   </div>
                 </div>
               )}
-
               <div className="flex gap-3">
                 <button onClick={() => setModalToggle(null)}
                   className="flex-1 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition-colors">

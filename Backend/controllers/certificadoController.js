@@ -4,40 +4,42 @@ const listarConformidade = async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT
-        u.id AS funcionario_id,
-        u.nome AS funcionario_nome,
+        u.id            AS funcionario_id,
+        u.nome          AS funcionario_nome,
         u.email,
         u.matricula,
-        t.id AS treinamento_id,
-        t.nome AS treinamento_nome,
+        t.id            AS treinamento_id,
+        t.nome          AS treinamento_nome,
         t.validade_meses,
-        c.id AS certificado_id,
+        c.id            AS certificado_id,
         c.data_emissao,
         c.data_validade,
-        c.status AS cert_status,
+        c.status        AS cert_status,
         DATEDIFF(c.data_validade, CURDATE()) AS dias_restantes,
         CASE
-          WHEN c.id IS NULL THEN 'sem_certificado'
-          WHEN c.status = 'cancelado' THEN 'sem_certificado'
-          WHEN c.data_validade <= CURDATE() THEN 'vencido'
+          WHEN c.id IS NULL                        THEN 'sem_certificado'
+          WHEN c.status = 'cancelado'              THEN 'sem_certificado'
+          WHEN c.data_validade <= CURDATE()        THEN 'vencido'
           WHEN DATEDIFF(c.data_validade, CURDATE()) <= 30 THEN 'vencendo'
           ELSE 'valido'
         END AS situacao
       FROM usuarios u
       CROSS JOIN treinamentos t
       LEFT JOIN certificados c
-        ON c.usuario_id = u.id
+        ON c.usuario_id    = u.id
         AND c.treinamento_id = t.id
-        AND c.status = 'ativo'
-        AND c.data_validade = (
-          SELECT MAX(c2.data_validade)
+        AND c.status       = 'ativo'
+        AND c.id = (
+          SELECT c2.id
           FROM certificados c2
-          WHERE c2.usuario_id = u.id
+          WHERE c2.usuario_id     = u.id
             AND c2.treinamento_id = t.id
-            AND c2.status = 'ativo'
+            AND c2.status        = 'ativo'
+          ORDER BY c2.data_validade DESC
+          LIMIT 1
         )
       WHERE u.ativo = 1
-        AND u.role = 'funcionario'
+        AND u.role  = 'funcionario'
         AND t.ativo = 1
         AND t.obrigatorio = 1
       ORDER BY u.nome, t.nome
@@ -81,7 +83,7 @@ const emitir = async (req, res) => {
       return res.status(404).json({ erro: 'Treinamento não encontrado.' });
     }
     const { validade_meses } = treinamento[0];
-    const dataEmissao = new Date(data_emissao);
+    const dataEmissao  = new Date(data_emissao);
     const dataValidade = new Date(dataEmissao);
     dataValidade.setMonth(dataValidade.getMonth() + validade_meses);
     const dataValStr = dataValidade.toISOString().split('T')[0];

@@ -10,6 +10,7 @@ const { iniciarCronJob }     = require('./jobs/cronJob');
 const { dispararAlertasN8n } = require('./jobs/cronJob');
 const app  = express();
 const PORT = process.env.PORT || 3001;
+const path = require('path');
 
 // ── Middlewares globais ─────────────────────────────────────
 app.use(cors({
@@ -17,6 +18,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.urlencoded({ extended: true }));
 
 // ── Rotas ───────────────────────────────────────────────────
@@ -54,5 +56,5 @@ app.listen(PORT, () => {
   console.log(`   Ambiente: ${process.env.NODE_ENV}`);
   console.log(`   URL: http://localhost:${PORT}/api/health\n`);
 
-  // iniciarCronJob();
+iniciarCronJob();
 });

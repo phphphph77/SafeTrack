@@ -1,12 +1,12 @@
 const pool = require('../config/db');
+const fs   = require('fs');
+const path = require('path');
 
 const listarFuncionarios = async (req, res) => {
   try {
-    // query param ?todos=true permite listar inativos (ex: página de Usuários)
     const incluirInativos = req.query.todos === 'true';
-
     const [rows] = await pool.query(
-      `SELECT id, nome, email, role, matricula, ativo, criado_em, ultimo_acesso
+      `SELECT id, nome, email, role, matricula, foto_perfil, ativo, criado_em, ultimo_acesso
        FROM usuarios
        ${incluirInativos ? '' : 'WHERE ativo = 1'}
        ORDER BY ativo DESC, nome ASC`
@@ -22,7 +22,7 @@ const buscarFuncionario = async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await pool.query(
-      'SELECT id, nome, email, role, matricula, ativo, criado_em FROM usuarios WHERE id = ? AND ativo = 1 LIMIT 1',
+      'SELECT id, nome, email, role, matricula, foto_perfil, ativo, criado_em FROM usuarios WHERE id = ? AND ativo = 1 LIMIT 1',
       [id]
     );
     if (rows.length === 0) return res.status(404).json({ erro: 'Usuário não encontrado.' });
@@ -61,33 +61,24 @@ const toggleStatusUsuario = async (req, res) => {
 
 const criarUsuario = async (req, res) => {
   const { nome, email, senha, role } = req.body;
-
   if (!nome || !email || !senha || !role) {
     return res.status(400).json({ erro: 'Todos os campos são obrigatórios.' });
   }
-
   const rolesValidos = ['admin', 'hse', 'funcionario'];
   if (!rolesValidos.includes(role)) {
     return res.status(400).json({ erro: 'Perfil inválido.' });
   }
-
   try {
-    const [existe] = await pool.query(
-      'SELECT id FROM usuarios WHERE email = ? LIMIT 1', [email]
-    );
+    const [existe] = await pool.query('SELECT id FROM usuarios WHERE email = ? LIMIT 1', [email]);
     if (existe.length > 0) {
       return res.status(409).json({ erro: 'Já existe um usuário com este e-mail.' });
     }
-
-    const bcrypt = require('bcryptjs');
+    const bcrypt    = require('bcryptjs');
     const senhaHash = await bcrypt.hash(senha, 10);
-
     await pool.query(
-      `INSERT INTO usuarios (nome, email, senha, role, ativo)
-       VALUES (?, ?, ?, ?, 1)`,
+      `INSERT INTO usuarios (nome, email, senha, role, ativo) VALUES (?, ?, ?, ?, 1)`,
       [nome.trim(), email.trim().toLowerCase(), senhaHash, role]
     );
-
     return res.status(201).json({ mensagem: `Usuário "${nome}" criado com sucesso.` });
   } catch (err) {
     console.error('[Usuário] Erro ao criar:', err.message);
@@ -95,4 +86,30 @@ const criarUsuario = async (req, res) => {
   }
 };
 
-module.exports = { listarFuncionarios, buscarFuncionario, desativarFuncionario, toggleStatusUsuario, criarUsuario };
+const uploadFoto = async (req, res) => {
+  const { id } = req.params;
+  if (!req.file) {
+    return res.status(400).json({ erro: 'Nenhuma imagem enviada.' });
+  }
+  try {
+    // Remove foto antiga se existir
+    const [rows] = await pool.query('SELECT foto_perfil FROM usuarios WHERE id = ? LIMIT 1', [id]);
+    if (rows[0]?.foto_perfil) {
+      const antigaPath = path.join(__dirname, '../../', rows[0].foto_perfil);
+      if (fs.existsSync(antigaPath)) fs.unlinkSync(antigaPath);
+    }
+
+    const fotoPath = `uploads/fotos/${req.file.filename}`;
+    await pool.query('UPDATE usuarios SET foto_perfil = ? WHERE id = ?', [fotoPath, id]);
+
+    return res.json({ mensagem: 'Foto atualizada com sucesso.', foto_perfil: fotoPath });
+  } catch (err) {
+    console.error('[Usuário] Erro ao salvar foto:', err.message);
+    return res.status(500).json({ erro: 'Erro interno no servidor.' });
+  }
+};
+
+module.exports = {
+  listarFuncionarios, buscarFuncionario, desativarFuncionario,
+  toggleStatusUsuario, criarUsuario, uploadFoto,
+};

@@ -61,5 +61,4 @@ export function AcessibilidadeProvider({ children }) {
   );
 }
 
-
 export const useAcessibilidade = () => useContext(AcessibilidadeContext);
