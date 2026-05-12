@@ -48,7 +48,7 @@ export default function Layout({ children }) {
       },
       {
         path:  '/pt',
-        label: 'Permissões de Trab.',
+        label: 'Permissões de Trabalho',
         icon:  ClipboardList,
         roles: ['admin', 'hse'],
       },
